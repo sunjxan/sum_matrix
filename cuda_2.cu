@@ -1,14 +1,14 @@
 #include "common.hpp"
 
-// 朴素实现，注意ix和iy对行列的编码
+// 朴素实现，注意iy和ix对行列的编码
 
 __global__ void kernel(const real (*A)[N], const real (*B)[N], real (*C)[N])
 {
     unsigned iy = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned ix = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (iy < N && ix < M) {
-        C[ix][iy] = A[ix][iy] + B[ix][iy];
+    if (iy < M && ix < N) {
+        C[iy][ix] = A[iy][ix] + B[iy][ix];
     }
 }
 
@@ -19,8 +19,8 @@ void sum_matrix(const real *A, const real *B, real *C)
     real (*nC)[N] = reinterpret_cast<decltype(nC)>(C);
 
     dim3 block_size(32, 32);
-    // N是列对应y，M是行对应x
-    dim3 grid_size(DIVUP(M, block_size.x), DIVUP(N, block_size.y));
+    // N是列对应x，M是行对应y
+    dim3 grid_size(DIVUP(N, block_size.x), DIVUP(M, block_size.y));
     kernel<<<grid_size, block_size>>>(nA, nB, nC);
     CHECK(cudaGetLastError());
     CHECK(cudaDeviceSynchronize());
